@@ -1,8 +1,10 @@
-#include <string>
 #include <iostream>
+#include <string>
 #include <SDL.h>
 #include "res_path.h"
 #include "cleanup.h"
+#include <stdio.h>
+#include <time.h>
 using namespace std;
 
 /*
@@ -62,10 +64,16 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y) {
 	SDL_RenderCopy(ren, tex, NULL, &dst);
 }
 
-int ximage = 0;
-int yimage = 0;
 
 int main(int, char**) {
+
+	int ximage = 0;
+	int yimage = 0;
+	int speedx, speedy;
+	string ximagedirection = "right";
+	string yimagedirection = "down";
+	srand(time(NULL));
+
 	//Start up SDL and make sure it went ok
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		logSDLError( cout, "SDL_Init");
@@ -88,11 +96,11 @@ int main(int, char**) {
 	}
 
 	//The textures we'll be using
-	SDL_Texture *background = loadTexture("C:/Users/Juan Pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/background.bmp", renderer);
-	SDL_Texture *image = loadTexture("C:/Users/Juan Pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/image.bmp", renderer);
-	SDL_Texture *ju = loadTexture("C:/Users/Juan Pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/ju.bmp", renderer);
-	SDL_Texture *an = loadTexture("C:/Users/Juan Pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/an.bmp", renderer);
-	SDL_Texture *pi = loadTexture("C:/Users/Juan Pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/pi.bmp", renderer);
+	SDL_Texture *background = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/background.bmp", renderer);
+	SDL_Texture *image = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/image.bmp", renderer);
+	SDL_Texture *ju = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/ju.bmp", renderer);
+	SDL_Texture *an = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/an.bmp", renderer);
+	SDL_Texture *pi = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/pi.bmp", renderer);
 	
 	//Make sure they both loaded ok
 	if (background == nullptr || image == nullptr || ju == nullptr || an == nullptr || pi == nullptr) {
@@ -101,7 +109,6 @@ int main(int, char**) {
 		return 1;
 	}
 
-	//A sleepy rendering loop, wait for 3 seconds and render and present the screen each time
 	for (int i = 0; i < 100000; ++i) {
 		//Clear the window
 		SDL_RenderClear(renderer);
@@ -124,27 +131,40 @@ int main(int, char**) {
 		renderTexture(background, renderer, 2 * bW, 2* bH);
 		renderTexture(background, renderer, 3 * bW, 2* bH);
 
-		//Draw our image in the center of the window
-		//We need the foreground image's width to properly compute the position
-		//of it's top left corner so that the image will be centered
-		int iW, iH;
-		SDL_QueryTexture(image, NULL, NULL, &iW, &iH);
-
 		if (ximage >= 1080) {
-			ximage = 0;
-			yimage = yimage + 200;
+			ximagedirection = "left";
+			speedx = (rand() % 9 + 1);
+		}
+		if (ximage <= 2) {
+			ximagedirection = "right";
+			speedx = (rand() % 9 + 1);
+		}
+		if (yimage <= 2) {
+			yimagedirection = "down";
+			speedy = (rand() % 9 + 1);
+		}
+		if (yimage >= 520) {
+			yimagedirection = "up";
+			speedy = (rand() % 9 + 1);
+		}
+		if (ximagedirection == "right") {
+			ximage = ximage + speedx;
+		}
+		if (ximagedirection == "left") {
+			ximage = ximage - speedx;
+		}
+		if (yimagedirection == "down") {
+			yimage = yimage + speedy;
+		}
+		if (yimagedirection == "up") {
+			yimage = yimage - speedy;
+		}
 
-		}
-		else {
-			ximage = ximage + 4;
-		}
-		
+
 		renderTexture(image, renderer, ximage, yimage);
-
-
 		//Update the screen
 		SDL_RenderPresent(renderer);
-		//Take a quick break after all that hard work
+
 		SDL_Delay(10);
 	}
 
