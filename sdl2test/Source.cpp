@@ -69,6 +69,8 @@ int main(int, char**) {
 
 	int ximage = 0;
 	int yimage = 0;
+	int xletras = 100;
+	int yletras = 300;
 	int speedx, speedy;
 	string ximagedirection = "right";
 	string yimagedirection = "down";
@@ -96,11 +98,11 @@ int main(int, char**) {
 	}
 
 	//The textures we'll be using
-	SDL_Texture *background = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/background.bmp", renderer);
-	SDL_Texture *image = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/image.bmp", renderer);
-	SDL_Texture *ju = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/ju.bmp", renderer);
-	SDL_Texture *an = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/an.bmp", renderer);
-	SDL_Texture *pi = loadTexture("C:/Users/jarvis/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/pi.bmp", renderer);
+	SDL_Texture *background = loadTexture("C:/Users/juan pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/background.bmp", renderer);
+	SDL_Texture *image = loadTexture("C:/Users/juan pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/image.bmp", renderer);
+	SDL_Texture *ju = loadTexture("C:/Users/juan pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/ju.bmp", renderer);
+	SDL_Texture *an = loadTexture("C:/Users/juan pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/an.bmp", renderer);
+	SDL_Texture *pi = loadTexture("C:/Users/juan pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/pi.bmp", renderer);
 	
 	//Make sure they both loaded ok
 	if (background == nullptr || image == nullptr || ju == nullptr || an == nullptr || pi == nullptr) {
@@ -160,7 +162,9 @@ int main(int, char**) {
 			yimage = yimage - speedy;
 		}
 
-
+		renderTexture(ju, renderer, xletras, yletras);
+		renderTexture(an, renderer, xletras + 370, yletras);
+		renderTexture(pi, renderer, xletras + 370 + 370, yletras);
 		renderTexture(image, renderer, ximage, yimage);
 		//Update the screen
 		SDL_RenderPresent(renderer);
