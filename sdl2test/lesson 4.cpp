@@ -98,7 +98,7 @@ int main(int, char**) {
 
 	//The texture we'll be using
 	const std::string resPath = getResourcePath("Lesson4");
-	SDL_Texture *image = loadTexture("C:/Users/juan pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/image.png", renderer);
+	SDL_Texture *image = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/image.png", renderer);
 	if (image == nullptr) {
 		cleanup(image, renderer, window);
 		IMG_Quit();

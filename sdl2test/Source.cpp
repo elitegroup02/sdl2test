@@ -6,8 +6,8 @@
 #include "cleanup.h"
 
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 1280;
+const int SCREEN_HEIGHT = 720;
 
 /*
 * Log an SDL error with some error message to the output stream of our choice
@@ -89,7 +89,7 @@ int main(int, char**) {
 		SDL_Quit();
 		return 1;
 	}
-	SDL_Texture *image = loadTexture("C:/Users/juan pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/image.png", renderer);
+	SDL_Texture *image = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/image.png", renderer);
 	if (image == nullptr) {
 		cleanup(image, renderer, window);
 		IMG_Quit();
@@ -100,8 +100,12 @@ int main(int, char**) {
 	//iW and iH are the clip width and height
 	//We'll be drawing only clips so get a center position for the w/h of a clip
 	int iW = 100, iH = 100;
-	int x = SCREEN_WIDTH / 2 - iW / 2;
-	int y = SCREEN_HEIGHT / 2 - iH / 2;
+	float x = 0;
+	float y = SCREEN_HEIGHT - iH;
+	float Velx = 0;
+	float Vely = 0;
+	float g = -0.20;
+	int jumpnumber = 0;
 
 	//Setup the clips for our image
 	SDL_Rect clips[4];
@@ -119,6 +123,7 @@ int main(int, char**) {
 	SDL_Event e;
 	bool quit = false;
 	while (!quit) {
+		//MAIN LOOP
 		//Event Polling
 		while (SDL_PollEvent(&e)) {
 			if (e.type == SDL_QUIT) {
@@ -127,20 +132,25 @@ int main(int, char**) {
 			//Use number input to select which clip should be drawn
 			if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
+				case SDLK_SPACE:
+					Vely = -15;
+					break;
+				case SDLK_LEFT:
+					if (x > 0) { Velx = -2.5; };
+					break;
+				case SDLK_RIGHT:
+					if (x < 1280) { Velx = 2.5; };
+					break;
 				case SDLK_1:
-				case SDLK_KP_1:
 					useClip = 0;
 					break;
 				case SDLK_2:
-				case SDLK_KP_2:
 					useClip = 1;
 					break;
 				case SDLK_3:
-				case SDLK_KP_3:
 					useClip = 2;
 					break;
 				case SDLK_4:
-				case SDLK_KP_4:
 					useClip = 3;
 					break;
 				case SDLK_ESCAPE:
@@ -150,13 +160,38 @@ int main(int, char**) {
 					break;
 				}
 			}
+			if (e.type == SDL_KEYUP) {
+				switch (e.key.keysym.sym) {
+				case SDLK_SPACE:
+					jumpnumber = jumpnumber+1;
+					break;
+				case SDLK_LEFT:
+					Velx = 0;
+					break;
+				case SDLK_RIGHT:
+					Velx = 0;
+					break;
+				default:
+					break;
+				}
+			}
 		}
+
+		//Movement logic goes here
+		if (y >= 720 - iH) { g = 0; }
+		else { g = -0.5; }
+		Vely = Vely - g;
+		if (x >= 0) { x = x + Velx; }
+		y = y + Vely;
+		if (y >= 720 - iH) { y = 720 - iH; }
+
 		//Rendering
 		SDL_RenderClear(renderer);
 		//Draw the image
 		renderTexture(image, renderer, x, y, &clips[useClip]);
 		//Update the screen
 		SDL_RenderPresent(renderer);
+
 	}
 	//Clean up
 	cleanup(image, renderer, window);

@@ -5,12 +5,9 @@
 #include "res_path.h"
 #include "cleanup.h"
 
-/*
-* Lesson 5: Clipping Sprite Sheets
-*/
-//Screen attributes
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+
+const int SCREEN_WIDTH = 1280;
+const int SCREEN_HEIGHT = 720;
 
 /*
 * Log an SDL error with some error message to the output stream of our choice
@@ -92,7 +89,7 @@ int main(int, char**) {
 		SDL_Quit();
 		return 1;
 	}
-	SDL_Texture *image = loadTexture("C:/Users/juan pablo/Documents/Visual Studio 2017/Projects/sdl2test/sdl2test/image.png", renderer);
+	SDL_Texture *image = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/image.png", renderer);
 	if (image == nullptr) {
 		cleanup(image, renderer, window);
 		IMG_Quit();

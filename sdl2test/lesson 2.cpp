@@ -17,8 +17,8 @@ const int SCREEN_HEIGHT = 480;
 * @param os The output stream to write the message too
 * @param msg The error message to write, format will be msg error: SDL_GetError()
 */
-void logSDLError( ostream &os, const  string &msg) {
-	os << msg << " error: " << SDL_GetError() <<  endl;
+void logSDLError(ostream &os, const  string &msg) {
+	os << msg << " error: " << SDL_GetError() << endl;
 }
 /*
 * Loads a BMP image into a texture on the rendering device
@@ -36,11 +36,11 @@ SDL_Texture* loadTexture(const  string &file, SDL_Renderer *ren) {
 		SDL_FreeSurface(loadedImage);
 		//Make sure converting went ok too
 		if (texture == nullptr) {
-			logSDLError( cout, "CreateTextureFromSurface");
+			logSDLError(cout, "CreateTextureFromSurface");
 		}
 	}
 	else {
-		logSDLError( cout, "LoadBMP");
+		logSDLError(cout, "LoadBMP");
 	}
 	return texture;
 }
@@ -65,27 +65,27 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y) {
 int main(int, char**) {
 	//Start up SDL and make sure it went ok
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		logSDLError( cout, "SDL_Init");
+		logSDLError(cout, "SDL_Init");
 		return 1;
 	}
 
 	//Setup our window and renderer
 	SDL_Window *window = SDL_CreateWindow("Lesson 2", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 	if (window == nullptr) {
-		logSDLError( cout, "CreateWindow");
+		logSDLError(cout, "CreateWindow");
 		SDL_Quit();
 		return 1;
 	}
 	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == nullptr) {
-		logSDLError( cout, "CreateRenderer");
+		logSDLError(cout, "CreateRenderer");
 		cleanup(window);
 		SDL_Quit();
 		return 1;
 	}
 
 	//The textures we'll be using
-	const  string resPath = getResourcePath("Lesson2");
+	const  string resPath = getResourcePath("img");
 	SDL_Texture *background = loadTexture(resPath + "background.bmp", renderer);
 	SDL_Texture *image = loadTexture(resPath + "image.bmp", renderer);
 	//Make sure they both loaded ok
@@ -96,7 +96,7 @@ int main(int, char**) {
 	}
 
 	//A sleepy rendering loop, wait for 3 seconds and render and present the screen each time
-	for (int i = 0; i < 3; ++i) {
+	for (int i = 0; i < 10000; ++i) {
 		//Clear the window
 		SDL_RenderClear(renderer);
 
@@ -122,7 +122,7 @@ int main(int, char**) {
 		//Update the screen
 		SDL_RenderPresent(renderer);
 		//Take a quick break after all that hard work
-		SDL_Delay(1000);
+		SDL_Delay(16);
 	}
 
 	cleanup(background, image, renderer, window);
