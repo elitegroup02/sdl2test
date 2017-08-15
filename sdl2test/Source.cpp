@@ -104,8 +104,12 @@ int main(int, char**) {
 	float y = SCREEN_HEIGHT - iH;
 	float Velx = 0;
 	float Vely = 0;
-	float g = -0.20;
+	float g = -0.75;
 	int jumpnumber = 0;
+	bool Leftpress = 0;
+	bool Rightpress = 0;
+	bool Movingright = 0;
+	bool Movingleft = 0;
 
 	//Setup the clips for our image
 	SDL_Rect clips[4];
@@ -133,13 +137,13 @@ int main(int, char**) {
 			if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
 				case SDLK_SPACE:
-					Vely = -15;
+					Vely = -20;
 					break;
 				case SDLK_LEFT:
-					if (x > 0) { Velx = -2.5; };
+					Leftpress = 1;
 					break;
 				case SDLK_RIGHT:
-					if (x < 1280) { Velx = 2.5; };
+					Rightpress = 1;
 					break;
 				case SDLK_1:
 					useClip = 0;
@@ -166,10 +170,10 @@ int main(int, char**) {
 					jumpnumber = jumpnumber+1;
 					break;
 				case SDLK_LEFT:
-					Velx = 0;
+					Leftpress = 0;
 					break;
 				case SDLK_RIGHT:
-					Velx = 0;
+					Rightpress = 0;
 					break;
 				default:
 					break;
@@ -178,8 +182,20 @@ int main(int, char**) {
 		}
 
 		//Movement logic goes here
-		if (y >= 720 - iH) { g = 0; }
-		else { g = -0.5; }
+		if (Rightpress == 1 && Leftpress == 1) //If both are pressed at the same time then stop
+		{
+			Velx = 0;
+		}
+		else //Else, only one of them is pressed. Pick the pressed side and give it a constant speed, also flag it as moving
+		{
+			if (Rightpress == 1) { Velx = 3.5; Movingright = 1; }
+			if (Leftpress == 1) { Velx = -3.5; Movingleft = 1; }
+		}
+		if (Movingleft == 1 && Leftpress == 0) { Velx = 0; Movingleft = 0; } //If either is moving and the button is released, reset the speed and flag
+		if (Movingright == 1 && Rightpress == 0) { Velx = 0; Movingright = 0; }
+
+		if (y >= 720 - iH) { g = 0; } //Otherwise the player will fall off the screen in the down (y +) direction
+		else { g = -0.75; } //TODO: make this modular and changable
 		Vely = Vely - g;
 		if (x >= 0) { x = x + Velx; }
 		y = y + Vely;
