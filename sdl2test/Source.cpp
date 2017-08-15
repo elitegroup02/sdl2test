@@ -182,6 +182,8 @@ int main(int, char**) {
 		}
 
 		//Movement logic goes here
+		if (x <= 0) { Leftpress = 0; }
+		if (x >= 1280 - iW) { Rightpress = 0; }
 		if (Rightpress == 1 && Leftpress == 1) //If both are pressed at the same time then stop
 		{
 			Velx = 0;
@@ -197,7 +199,7 @@ int main(int, char**) {
 		if (y >= 720 - iH) { g = 0; } //Otherwise the player will fall off the screen in the down (y +) direction
 		else { g = -0.75; } //TODO: make this modular and changable
 		Vely = Vely - g;
-		if (x >= 0) { x = x + Velx; }
+		x = x + Velx;
 		y = y + Vely;
 		if (y >= 720 - iH) { y = 720 - iH; }
 
