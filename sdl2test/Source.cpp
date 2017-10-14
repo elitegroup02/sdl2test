@@ -1,11 +1,14 @@
 #include <string>
 #include <iostream>
+#include <windows.h>
+#include <experimental/filesystem>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <math.h>
+#include <vector>
 #include "res_path.h"
 #include "cleanup.h"
-
+namespace fs = std::experimental::filesystem::v1;
 using namespace std;
 
 Uint32 get_pixel32(SDL_Surface *surface, int x, int y)
@@ -35,7 +38,7 @@ SDL_Surface *ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 	SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel,
 		Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
 
-	double    _stretch_factor_x = (static_cast<double>(Width) / (static_cast<double>(Surface->w) / 2)),
+	double    _stretch_factor_x = (static_cast<double>(Width) / (static_cast<double>(Surface->w))),
 		_stretch_factor_y = (static_cast<double>(Height) / static_cast<double>(Surface->h));
 
 	for (Sint32 y = 0; y < Surface->h; y++) {
@@ -48,6 +51,9 @@ SDL_Surface *ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 			}
 		}
 	}
+
+	SDL_SetColorKey( _ret , SDL_TRUE, SDL_MapRGB(_ret->format, 0, 0xFF, 0xFF));
+
 	return _ret;
 }
 
@@ -110,10 +116,72 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, SDL_Rect *
 	renderTexture(tex, ren, dst, clip);
 }
 
+string path(void) {
+
+	wchar_t buffer[MAX_PATH];
+	GetModuleFileName(NULL, buffer, MAX_PATH);
+	wstring wstr(buffer);
+	string str(wstr.begin(), wstr.end());
+
+	using convert_typeX = codecvt_utf8<wchar_t>;
+	wstring_convert<convert_typeX, wchar_t> converterX;
+
+	string exepath = converterX.to_bytes(wstr);
+	exepath.erase(exepath.end() - 12, exepath.end());
+	return exepath;
+
+}
+
+
 int main(int, char**) {
 
 	int S_W;
 	int S_H;
+	//iW and iH are the clip width and height
+	//We'll be drawing only clips so get a center position for the w/h of a clip
+	int iW = 100, iH = 100;
+	float xPlayer = 0; //The initial x position
+	float yPlayer = S_H - iH; //The initial height is the floor
+	float Velx = 0;
+	float Vely = 0;
+	float g = -0.80;
+	bool Leftpress = 0;
+	bool Rightpress = 0;
+	bool Rightpressaux = 0;
+	bool Leftpressaux = 0;
+	bool Movingright = 0;
+	bool Movingleft = 0;
+	int jumpnumber = 0;
+
+	// Make this a vector...
+	int Cloudsloop = 0;
+	int Mountainsloop = 0;
+	int Grassloop = 0;
+	int Sunloop = 0;	
+	float xBase = 0;
+	float yBase = 0;
+	float xMountains = 0;
+	float yMountains = 0;
+	float xClouds = 0;
+	float yClouds = 0;
+	float xSun = 0;
+	float ySun = 0;
+	float xGrass = 0;
+	float yGrass = 0;
+	float xLimit = 3.5;
+	float VelNomx = 3.5;
+
+	string opath = path();
+	string respath = (opath + "res");
+	string files[5];
+
+	cout << respath << endl;
+	vector <string> resfiles;
+	vector <string> resfilesname;
+
+	for (auto & p : fs::directory_iterator(respath)) {
+		resfiles.push_back(p.path().string());
+	}
 
 	cout << "Input the screen width: ";
 	cin >> S_W;
@@ -143,8 +211,8 @@ int main(int, char**) {
 		SDL_Quit();
 		return 1;
 	}
-	SDL_Texture *player = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/image.png", renderer);
-	SDL_Texture *Sun = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Sun.png", renderer);
+	
+	/* 	SDL_Texture *Sun = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Sun.png", renderer);
 	SDL_Texture *Clouds = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Clouds.png", renderer);
 	SDL_Texture *Base = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Base.png", renderer);
 	SDL_Texture *Mountains = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Mountains.png", renderer);
@@ -154,39 +222,28 @@ int main(int, char**) {
 		IMG_Quit();
 		SDL_Quit();
 		return 1;
+	} */
+
+	for (string x : resfiles) {
+		cout << x << endl;
+		resfilesname.push_back(x.erase(0, (x.find("%"))+1));
+	}
+	for (string x : resfilesname) {
+		cout << x << endl;
 	}
 
-	//iW and iH are the clip width and height
-	//We'll be drawing only clips so get a center position for the w/h of a clip
-	int iW = 100, iH = 100;
-	float xPlayer = 0; //The initial x position
-	float yPlayer = S_H - iH; //The initial height is the floor
-	float Velx = 0;
-	float Vely = 0;
-	float g = -0.80;
-	int jumpnumber = 0;
-	int Cloudsloop = 0;
-	int Mountainsloop = 0;
-	int Grassloop = 0;
-	int Sunloop = 0;
-	bool Leftpress = 0;
-	bool Rightpress = 0;
-	bool Rightpressaux = 0;
-	bool Leftpressaux = 0;
-	bool Movingright = 0;
-	bool Movingleft = 0;
-	float xBase = 0;
-	float yBase = 0;
-	float xMountains = 0;
-	float yMountains = 0;
-	float xClouds = 0;
-	float yClouds = 0;
-	float xSun = 0;
-	float ySun = 0;
-	float xGrass = 0;
-	float yGrass = 0;
-	float xLimit = 3.5;
-	float VelNomx = 3.5;
+	SDL_Surface* playersurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/player.png"), S_W, S_H);
+	SDL_Surface* sunsurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Sun.png"), S_W, S_H);
+	SDL_Surface* basesurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Base.png"), S_W, S_H);
+	SDL_Surface* cloudssurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Clouds.png"), S_W, S_H);
+	SDL_Surface* grasssurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Grass.png"), S_W, S_H);
+	SDL_Surface* mountainssurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Mountains.png"), S_W, S_H);
+	SDL_Texture* playertextopt = SDL_CreateTextureFromSurface(renderer, playersurfaceopt);
+	SDL_Texture* suntextureopt = SDL_CreateTextureFromSurface(renderer, sunsurfaceopt);
+	SDL_Texture* basetextureopt = SDL_CreateTextureFromSurface(renderer, basesurfaceopt);
+	SDL_Texture* cloudstextureopt = SDL_CreateTextureFromSurface(renderer, cloudssurfaceopt);
+	SDL_Texture* grasstextureopt = SDL_CreateTextureFromSurface(renderer, grasssurfaceopt);
+	SDL_Texture* mountainstextureopt = SDL_CreateTextureFromSurface(renderer, mountainssurfaceopt);
 
 	//Setup the clips for our image
 	SDL_Rect clips[4];
@@ -201,18 +258,6 @@ int main(int, char**) {
 	//Specify a default clip to start with
 	int useClip = 0;
 
-	SDL_Surface* imagesurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/image.png"), S_W, S_H);
-	SDL_Surface* sunsurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Sun.png"), S_W, S_H);
-	SDL_Surface* basesurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Base.png"), S_W, S_H);
-	SDL_Surface* cloudssurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Clouds.png"), S_W, S_H);
-	SDL_Surface* grasssurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Grass.png"), S_W, S_H);
-	SDL_Surface* mountainssurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Mountains.png"), S_W, S_H);
-	SDL_Texture* imagetextureopt = SDL_CreateTextureFromSurface(renderer, imagesurfaceopt);
-	SDL_Texture* suntextureopt = SDL_CreateTextureFromSurface(renderer, sunsurfaceopt);
-	SDL_Texture* basetextureopt = SDL_CreateTextureFromSurface(renderer, basesurfaceopt);
-	SDL_Texture* cloudstextureopt = SDL_CreateTextureFromSurface(renderer, cloudssurfaceopt);
-	SDL_Texture* grasstextureopt = SDL_CreateTextureFromSurface(renderer, grasssurfaceopt);
-	SDL_Texture* mountainstextureopt = SDL_CreateTextureFromSurface(renderer, mountainssurfaceopt);
 
 	SDL_Event e;
 	bool quit = false;
@@ -227,7 +272,7 @@ int main(int, char**) {
 			if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
 				case SDLK_SPACE:
-					Vely = -20;
+					Vely = - 20;
 					break;
 				case SDLK_LEFT:
 					Leftpress = 1;
@@ -332,13 +377,13 @@ int main(int, char**) {
 		renderTexture(mountainstextureopt, renderer, (xMountains + S_W), yMountains);
 		renderTexture(grasstextureopt, renderer, xGrass, yGrass);
 		renderTexture(grasstextureopt, renderer, (xGrass + S_W), yGrass);
-		renderTexture(player, renderer, xPlayer, yPlayer, &clips[useClip]);
+		renderTexture(playertextopt, renderer, xPlayer, yPlayer, &clips[useClip]);
 		//Update the screen
 		SDL_RenderPresent(renderer);
 
 	}
 	//Clean up
-	cleanup(player, Sun, Clouds, Base, Mountains, Grass, renderer, window);
+	cleanup(playertextopt, suntextureopt, sunsurfaceopt, cloudssurfaceopt, cloudstextureopt, basesurfaceopt, basetextureopt, mountainssurfaceopt, mountainstextureopt, grasssurfaceopt, grasstextureopt, renderer, window);
 	IMG_Quit();
 	SDL_Quit();
 
