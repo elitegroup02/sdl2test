@@ -178,6 +178,7 @@ int main(int, char**) {
 	cout << respath << endl;
 	vector <string> resfiles;
 	vector <string> resfilesname;
+	vector <SDL_Texture*> opt_textures;
 
 	for (auto & p : fs::directory_iterator(respath)) {
 		resfiles.push_back(p.path().string());
@@ -212,26 +213,15 @@ int main(int, char**) {
 		return 1;
 	}
 	
-	/* 	SDL_Texture *Sun = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Sun.png", renderer);
-	SDL_Texture *Clouds = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Clouds.png", renderer);
-	SDL_Texture *Base = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Base.png", renderer);
-	SDL_Texture *Mountains = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Mountains.png", renderer);
-	SDL_Texture *Grass = loadTexture("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Grass.png", renderer);
-	if (player == nullptr || Sun == nullptr || Clouds == nullptr || Base == nullptr || Mountains == nullptr || Grass == nullptr) {
-		cleanup(player, Sun, Clouds, Base, Mountains, Grass, renderer, window);
-		IMG_Quit();
-		SDL_Quit();
-		return 1;
-	} */
-
 	for (string x : resfiles) {
 		cout << x << endl;
 		resfilesname.push_back(x.erase(0, (x.find("%"))+1));
 	}
-	for (string x : resfilesname) {
-		cout << x << endl;
-	}
 
+	for (string x : resfiles) {
+		opt_textures.push_back(SDL_CreateTextureFromSurface(renderer, ScaleSurface(loadSurface(x), S_W, S_H)));
+	}
+/*
 	SDL_Surface* playersurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/player.png"), S_W, S_H);
 	SDL_Surface* sunsurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Sun.png"), S_W, S_H);
 	SDL_Surface* basesurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Base.png"), S_W, S_H);
@@ -244,7 +234,7 @@ int main(int, char**) {
 	SDL_Texture* cloudstextureopt = SDL_CreateTextureFromSurface(renderer, cloudssurfaceopt);
 	SDL_Texture* grasstextureopt = SDL_CreateTextureFromSurface(renderer, grasssurfaceopt);
 	SDL_Texture* mountainstextureopt = SDL_CreateTextureFromSurface(renderer, mountainssurfaceopt);
-
+*/
 	//Setup the clips for our image
 	SDL_Rect clips[4];
 	//Since our clips our uniform in size we can generate a list of their
@@ -367,6 +357,11 @@ int main(int, char**) {
 		//Rendering
 		SDL_RenderClear(renderer);
 		//Draw the image
+		for (SDL_Texture* x : opt_textures) {
+			renderTexture(x, renderer, xBase, yBase);
+			renderTexture(x, renderer, (xBase + S_W), yBase);
+		}
+		/*
 		renderTexture(basetextureopt, renderer, xBase, yBase);
 		renderTexture(basetextureopt, renderer, (xBase + S_W), yBase);
 		renderTexture(suntextureopt, renderer, xSun, ySun);
@@ -378,12 +373,17 @@ int main(int, char**) {
 		renderTexture(grasstextureopt, renderer, xGrass, yGrass);
 		renderTexture(grasstextureopt, renderer, (xGrass + S_W), yGrass);
 		renderTexture(playertextopt, renderer, xPlayer, yPlayer, &clips[useClip]);
+		*/
 		//Update the screen
 		SDL_RenderPresent(renderer);
 
+
 	}
 	//Clean up
-	cleanup(playertextopt, suntextureopt, sunsurfaceopt, cloudssurfaceopt, cloudstextureopt, basesurfaceopt, basetextureopt, mountainssurfaceopt, mountainstextureopt, grasssurfaceopt, grasstextureopt, renderer, window);
+	for (SDL_Texture* x : opt_textures) {
+		cleanup(x);
+	}
+	// cleanup(playertextopt, suntextureopt, sunsurfaceopt, cloudssurfaceopt, cloudstextureopt, basesurfaceopt, basetextureopt, mountainssurfaceopt, mountainstextureopt, grasssurfaceopt, grasstextureopt, renderer, window);
 	IMG_Quit();
 	SDL_Quit();
 
