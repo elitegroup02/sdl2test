@@ -132,6 +132,27 @@ string path(void) {
 
 }
 
+void initialisefiles(string respath, vector <string>& resfiles, vector <string>& resfilesname) {
+	string stringaux = "";
+
+	for (auto & p : fs::directory_iterator(respath)) {
+		resfiles.push_back(p.path().string());
+	}
+	for (string x : resfiles) {
+		cout << x << endl;
+		while (x != stringaux) {
+			stringaux = x;
+			x.erase(0, (x.find("\\") + 1));
+		}
+		cout << x << endl;
+		resfilesname.push_back(x.erase(0, (x.find(".")) + 1));
+	}
+	for (string y : resfilesname) {
+		cout << y << endl;
+	}
+
+}
+
 
 int main(int, char**) {
 
@@ -173,17 +194,14 @@ int main(int, char**) {
 
 	string opath = path();
 	string respath = (opath + "res");
-	string files[5];
 
 	cout << respath << endl;
 	vector <string> resfiles;
 	vector <string> resfilesname;
 	vector <SDL_Texture*> opt_textures;
 
-	for (auto & p : fs::directory_iterator(respath)) {
-		resfiles.push_back(p.path().string());
-	}
-
+	initialisefiles(respath, resfiles, resfilesname);
+	
 	cout << "Input the screen width: ";
 	cin >> S_W;
 	cout << "\nInput screen height: ";
@@ -213,10 +231,6 @@ int main(int, char**) {
 		return 1;
 	}
 	
-	for (string x : resfiles) {
-		cout << x << endl;
-		resfilesname.push_back(x.erase(0, (x.find("%"))+1));
-	}
 
 	for (string x : resfiles) {
 		opt_textures.push_back(SDL_CreateTextureFromSurface(renderer, ScaleSurface(loadSurface(x), S_W, S_H)));
