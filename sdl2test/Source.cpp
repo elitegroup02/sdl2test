@@ -6,10 +6,16 @@
 #include <SDL_image.h>
 #include <math.h>
 #include <vector>
+#include "tinyxml2.h"
 #include "res_path.h"
 #include "cleanup.h"
 namespace fs = std::experimental::filesystem::v1;
 using namespace std;
+
+
+#ifndef XMLCheckResult
+#define XMLCheckResult(a_eResult) if (a_eResult != XML_SUCCESS) { printf("Error: %i\n", a_eResult); return a_eResult; }
+#endif
 
 Uint32 get_pixel32(SDL_Surface *surface, int x, int y)
 {
@@ -202,6 +208,39 @@ int main(int, char**) {
 
 	initialisefiles(respath, resfiles, resfilesname);
 	
+	tinyxml2::XMLDocument xmlDoc;
+	tinyxml2::XMLNode * pRoot = xmlDoc.NewElement("Root");
+	xmlDoc.InsertFirstChild(pRoot);
+	tinyxml2::XMLElement * pElement = xmlDoc.NewElement("IntValue");
+	pElement->SetText(10);
+	pRoot->InsertEndChild(pElement);
+	pElement = xmlDoc.NewElement("FloatValue");
+	pElement->SetText(0.5f);
+
+	pRoot->InsertEndChild(pElement);
+
+	pElement = xmlDoc.NewElement("Date");
+	pElement->SetAttribute("day", 26);
+	pElement->SetAttribute("month", "April");
+	pElement->SetAttribute("year", 2014);
+	pElement->SetAttribute("dateFormat", "26/04/2014");
+
+	pRoot->InsertEndChild(pElement);
+
+	pElement = xmlDoc.NewElement("List");
+	vector<int> veclist;
+	for (int i = 0; i < 100; i++) { veclist.push_back(i); }
+	for (const auto & item : veclist)
+	{
+		tinyxml2::XMLElement * pListElement = xmlDoc.NewElement("Item");
+		pListElement->SetText(item);
+
+		pElement->InsertEndChild(pListElement);
+	}
+
+	pRoot->InsertEndChild(pElement);
+	tinyxml2::XMLError(xmlDoc.SaveFile("gamesettings.xml"));
+
 	cout << "Input the screen width: ";
 	cin >> S_W;
 	cout << "\nInput screen height: ";
@@ -215,7 +254,7 @@ int main(int, char**) {
 	}
 
 	//Setup our window and renderer
-	SDL_Window *window = SDL_CreateWindow("Game", SDL_WINDOWPOS_CENTERED,
+	SDL_Window *window = SDL_CreateWindow("Moving ball of DOOooOOooO000OOOo0O0oom", SDL_WINDOWPOS_CENTERED,
 		SDL_WINDOWPOS_CENTERED, S_W, S_H, SDL_WINDOW_SHOWN);
 	if (window == nullptr) {
 		logSDLError(std::cout, "CreateWindow");
@@ -326,7 +365,7 @@ int main(int, char**) {
 
 		//Movement logic goes here
 		if (xPlayer <= 0) { Leftpress = 0; } //This means only the opposite button to the edge of the screen being touched can be pressed
-		if (xPlayer >= (1280 - iW) / xLimit) { Rightpress = 0; } //1280 -250 pixels that make a buffer for the rest of the level
+		if (xPlayer >= (1280 - iW) / xLimit) { Rightpress = 0; } // fraction of the screen used to simulate movement. iW is image(player) width
 		if (Rightpress == 1 && Leftpress == 1) //If both are pressed at the same time then stop
 		{
 			Velx = 0;
