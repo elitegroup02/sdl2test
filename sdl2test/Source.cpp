@@ -211,10 +211,15 @@ int main(int, char**) {
 	tinyxml2::XMLDocument xmlDoc;
 	tinyxml2::XMLNode * pRoot = xmlDoc.NewElement("Root");
 	xmlDoc.InsertFirstChild(pRoot);
-	tinyxml2::XMLElement * pElement = xmlDoc.NewElement("IntValue");
-	pElement->SetText(10);
+	tinyxml2::XMLElement * pElement = xmlDoc.NewElement("Files");
+	for (string x : resfilesname)
+	{
+		pElement->SetText(x.c_str());
+		tinyxml2::XMLElement * pFileListElement = xmlDoc.NewElement("File");
+		pElement->InsertEndChild(pFileListElement);
+	}
 	pRoot->InsertEndChild(pElement);
-	pElement = xmlDoc.NewElement("FloatValue");
+	pElement = xmlDoc.NewElement("Resolution");
 	pElement->SetText(0.5f);
 
 	pRoot->InsertEndChild(pElement);
@@ -233,7 +238,7 @@ int main(int, char**) {
 	for (const auto & item : veclist)
 	{
 		tinyxml2::XMLElement * pListElement = xmlDoc.NewElement("Item");
-		pListElement->SetText(item);
+		pListElement->SetText(item + "es un numero");
 
 		pElement->InsertEndChild(pListElement);
 	}
