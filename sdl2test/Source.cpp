@@ -12,10 +12,10 @@
 namespace fs = std::experimental::filesystem::v1;
 using namespace std;
 
-
 #ifndef XMLCheckResult
-#define XMLCheckResult(a_eResult) if (a_eResult != XML_SUCCESS) { printf("Error: %i\n", a_eResult); return a_eResult; }
+#define XMLCheckResult(a_eResult) if (a_eResult != tinyxml2::XML_SUCCESS) { printf("Error: %i\n", a_eResult); return a_eResult; }
 #endif
+
 
 Uint32 get_pixel32(SDL_Surface *surface, int x, int y)
 {
@@ -162,41 +162,20 @@ void initialisefiles(string respath, vector <string>& resfiles, vector <string>&
 
 int main(int, char**) {
 
-	int S_W;
-	int S_H;
+	int resolutionx = 1280, resolutiony = 720;
 	//iW and iH are the clip width and height
 	//We'll be drawing only clips so get a center position for the w/h of a clip
 	int iW = 100, iH = 100;
-	float xPlayer = 0; //The initial x position
-	float yPlayer = S_H - iH; //The initial height is the floor
-	float Velx = 0;
-	float Vely = 0;
-	float g = -0.80;
-	bool Leftpress = 0;
-	bool Rightpress = 0;
-	bool Rightpressaux = 0;
-	bool Leftpressaux = 0;
-	bool Movingright = 0;
-	bool Movingleft = 0;
-	int jumpnumber = 0;
+	double xPlayer = 0; //The initial x position
+	double yPlayer = resolutiony - iH; //The initial height is the floor
+	double Velx = 0, Vely = 0;
+	double g = -0.80; //downwards accelleration, "gravity"
+	bool Leftpress = 0, Rightpress = 0, Rightpressaux = 0, Leftpressaux = 0, Movingright = 0, Movingleft = 0;
+	int jumpnumber = 0; //TODO: make this a thing!!!
 
-	// Make this a vector...
-	int Cloudsloop = 0;
-	int Mountainsloop = 0;
-	int Grassloop = 0;
-	int Sunloop = 0;	
-	float xBase = 0;
-	float yBase = 0;
-	float xMountains = 0;
-	float yMountains = 0;
-	float xClouds = 0;
-	float yClouds = 0;
-	float xSun = 0;
-	float ySun = 0;
-	float xGrass = 0;
-	float yGrass = 0;
-	float xLimit = 3.5;
-	float VelNomx = 3.5;
+	double xBase = 0, yBase = 0, xMountains = 0, yMountains = 0, xClouds = 0, yClouds = 0, xSun = 0, yGrass = 0;
+	//TODO!! ---> Make this not like this, possibly after initializing vectors... make a vector containing x/y values or smth idk...
+	double xLimit = 3.5, VelNomx = 3.5, ySun = 0, xGrass = 0;
 
 	string opath = path();
 	string respath = (opath + "res");
@@ -209,48 +188,44 @@ int main(int, char**) {
 	initialisefiles(respath, resfiles, resfilesname);
 	
 	tinyxml2::XMLDocument xmlDoc;
-	tinyxml2::XMLNode * pRoot = xmlDoc.NewElement("Root");
-	xmlDoc.InsertFirstChild(pRoot);
-	tinyxml2::XMLElement * pElement = xmlDoc.NewElement("Files");
-	for (string x : resfilesname)
+	tinyxml2::XMLElement * pElement;
+	tinyxml2::XMLError eResult = xmlDoc.LoadFile("gamesettings.xml");
+	XMLCheckResult(eResult);
+
+	if (eResult != 0)
 	{
-		pElement->SetText(x.c_str());
-		tinyxml2::XMLElement * pFileListElement = xmlDoc.NewElement("File");
-		pElement->InsertEndChild(pFileListElement);
-	}
-	pRoot->InsertEndChild(pElement);
-	pElement = xmlDoc.NewElement("Resolution");
-	pElement->SetText(0.5f);
+		tinyxml2::XMLNode * pRoot = xmlDoc.NewElement("Root");
+		xmlDoc.InsertFirstChild(pRoot);
+		pElement = xmlDoc.NewElement("Files");
+		for (string x : resfilesname)
+		{
+			tinyxml2::XMLElement * pFileListElement = xmlDoc.NewElement("Filename");
+			pFileListElement->SetText(x.c_str());
+			pElement->InsertEndChild(pFileListElement);
+		}
+		pRoot->InsertEndChild(pElement);
 
-	pRoot->InsertEndChild(pElement);
+		pElement = xmlDoc.NewElement("Resolution");
+		tinyxml2::XMLElement * pResolutionElement = xmlDoc.NewElement("resolutionx");
+		pResolutionElement->SetText(resolutionx);
+		pElement->InsertEndChild(pResolutionElement);
+		pResolutionElement = xmlDoc.NewElement("resolutiony");
+		pResolutionElement->SetText(resolutiony);
+		pElement->InsertEndChild(pResolutionElement);
+		pRoot->InsertEndChild(pElement);
 
-	pElement = xmlDoc.NewElement("Date");
-	pElement->SetAttribute("day", 26);
-	pElement->SetAttribute("month", "April");
-	pElement->SetAttribute("year", 2014);
-	pElement->SetAttribute("dateFormat", "26/04/2014");
-
-	pRoot->InsertEndChild(pElement);
-
-	pElement = xmlDoc.NewElement("List");
-	vector<int> veclist;
-	for (int i = 0; i < 100; i++) { veclist.push_back(i); }
-	for (const auto & item : veclist)
-	{
-		tinyxml2::XMLElement * pListElement = xmlDoc.NewElement("Item");
-		pListElement->SetText(item + "es un numero");
-
-		pElement->InsertEndChild(pListElement);
+		tinyxml2::XMLError(xmlDoc.SaveFile("gamesettings.xml"));
 	}
 
-	pRoot->InsertEndChild(pElement);
-	tinyxml2::XMLError(xmlDoc.SaveFile("gamesettings.xml"));
+	tinyxml2::XMLNode * pRoot = xmlDoc.FirstChild();
+	if (pRoot == nullptr) return tinyxml2::XML_ERROR_FILE_READ_ERROR;
+	pElement = pRoot->FirstChildElement("Files");
+	if (pElement == nullptr) return tinyxml2::XML_ERROR_PARSING_ELEMENT;
+	tinyxml2::XMLElement * pListElement = pElement->FirstChildElement("Filename");
+	std::vector<string> vecList;
 
-	cout << "Input the screen width: ";
-	cin >> S_W;
-	cout << "\nInput screen height: ";
-	cin >> S_H;
-	cout << "\n";
+	//YOU CAN INPUT STUFF FROM HERE ON, EVERYTHING BEFORE THIS HAPPENS BEFORE YOU TYPE ANYTHIIIING
+
 
 	//Start up SDL and make sure it went ok
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -260,7 +235,7 @@ int main(int, char**) {
 
 	//Setup our window and renderer
 	SDL_Window *window = SDL_CreateWindow("Moving ball of DOOooOOooO000OOOo0O0oom", SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED, S_W, S_H, SDL_WINDOW_SHOWN);
+		SDL_WINDOWPOS_CENTERED, resolutionx, resolutiony, SDL_WINDOW_SHOWN);
 	if (window == nullptr) {
 		logSDLError(std::cout, "CreateWindow");
 		SDL_Quit();
@@ -277,22 +252,9 @@ int main(int, char**) {
 	
 
 	for (string x : resfiles) {
-		opt_textures.push_back(SDL_CreateTextureFromSurface(renderer, ScaleSurface(loadSurface(x), S_W, S_H)));
+		opt_textures.push_back(SDL_CreateTextureFromSurface(renderer, ScaleSurface(loadSurface(x), resolutionx, resolutiony)));
 	}
-/*
-	SDL_Surface* playersurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/player.png"), S_W, S_H);
-	SDL_Surface* sunsurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Sun.png"), S_W, S_H);
-	SDL_Surface* basesurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Base.png"), S_W, S_H);
-	SDL_Surface* cloudssurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Clouds.png"), S_W, S_H);
-	SDL_Surface* grasssurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Grass.png"), S_W, S_H);
-	SDL_Surface* mountainssurfaceopt = ScaleSurface(loadSurface("C:/Users/juanp/Source/Repos/sdl2test/sdl2test/Mountains.png"), S_W, S_H);
-	SDL_Texture* playertextopt = SDL_CreateTextureFromSurface(renderer, playersurfaceopt);
-	SDL_Texture* suntextureopt = SDL_CreateTextureFromSurface(renderer, sunsurfaceopt);
-	SDL_Texture* basetextureopt = SDL_CreateTextureFromSurface(renderer, basesurfaceopt);
-	SDL_Texture* cloudstextureopt = SDL_CreateTextureFromSurface(renderer, cloudssurfaceopt);
-	SDL_Texture* grasstextureopt = SDL_CreateTextureFromSurface(renderer, grasssurfaceopt);
-	SDL_Texture* mountainstextureopt = SDL_CreateTextureFromSurface(renderer, mountainssurfaceopt);
-*/
+
 	//Setup the clips for our image
 	SDL_Rect clips[4];
 	//Since our clips our uniform in size we can generate a list of their
@@ -407,32 +369,19 @@ int main(int, char**) {
 			xSun = xSun - (3.5) / 12;
 		}
 
-		if (xSun <= -S_W) { xSun = 0; }
-		if (xGrass <= -S_W) { xGrass = 0; }
-		if (xMountains <= -S_W) { xMountains = 0; }
-		if (xClouds <= -S_W) { xClouds = 0; }
+		if (xSun <= -resolutionx) { xSun = 0; }
+		if (xGrass <= -resolutionx) { xGrass = 0; }
+		if (xMountains <= -resolutionx) { xMountains = 0; }
+		if (xClouds <= -resolutionx) { xClouds = 0; }
 
 		//Rendering
 		SDL_RenderClear(renderer);
 		//Draw the image
 		for (SDL_Texture* x : opt_textures) {
 			renderTexture(x, renderer, xBase, yBase);
-			renderTexture(x, renderer, (xBase + S_W), yBase);
+			renderTexture(x, renderer, (xBase + resolutionx), yBase);
 		}
-		/*
-		renderTexture(basetextureopt, renderer, xBase, yBase);
-		renderTexture(basetextureopt, renderer, (xBase + S_W), yBase);
-		renderTexture(suntextureopt, renderer, xSun, ySun);
-		renderTexture(suntextureopt, renderer, (xSun + S_W), ySun);
-		renderTexture(cloudstextureopt, renderer, xClouds, yClouds);
-		renderTexture(cloudstextureopt, renderer, (xClouds + S_W), yClouds);
-		renderTexture(mountainstextureopt, renderer, xMountains, yMountains);
-		renderTexture(mountainstextureopt, renderer, (xMountains + S_W), yMountains);
-		renderTexture(grasstextureopt, renderer, xGrass, yGrass);
-		renderTexture(grasstextureopt, renderer, (xGrass + S_W), yGrass);
-		renderTexture(playertextopt, renderer, xPlayer, yPlayer, &clips[useClip]);
-		*/
-		//Update the screen
+		
 		SDL_RenderPresent(renderer);
 
 
