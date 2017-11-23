@@ -35,17 +35,17 @@ void put_pixel32(SDL_Surface *surface, int x, int y, Uint32 pixel)
 	pixels[(y * surface->w) + x] = pixel;
 }
 
-SDL_Surface *ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
+SDL_Surface *ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height) //TODO: ADD A SECOND OPTION TO SCALE A SURFACE EVEN MORE THAN WHAT WOULD BE PROPORTIONAL, SOMETHING LIKE EXTRASCALEFACTOR
 {
 	if (!Surface || !Width || !Height) {
 		return 0;
 	}
 
-	SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel,
+	SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, (Width * ((static_cast<double>(Surface->w)) / 1280)), (Height * ((static_cast<double>(Surface->h)) / 720)), Surface->format->BitsPerPixel,
 		Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
 
-	double    _stretch_factor_x = (static_cast<double>(Width) / (static_cast<double>(Surface->w))),
-		_stretch_factor_y = (static_cast<double>(Height) / static_cast<double>(Surface->h));
+	double    _stretch_factor_x = ((static_cast<double>(Width) / (static_cast<double>(Surface->w)))*((static_cast<double>(Surface->w))/1280)),
+		_stretch_factor_y = ((static_cast<double>(Height) / (static_cast<double>(Surface->h)))*(static_cast<double>(Surface->h))/720);
 
 	for (Sint32 y = 0; y < Surface->h; y++) {
 		for (Sint32 x = 0; x < Surface->w; x++) {
@@ -138,8 +138,14 @@ string path(void) {
 
 }
 
-void initialisefiles(string respath, vector <string>& resfiles, vector <string>& resfilesname) {
+void readmap()
+{
+
+}
+
+void initialisefiles(string respath, vector <string>& resfiles, vector <string>& resfilesname, vector <double>& posx, vector <double>& posy, vector <double> blockypos, vector <double> blockxpos, vector <double> itemypos, vector <double> itemxpos, double yPlayer, double xPlayer) {
 	string stringaux = "";
+	int auxnum = 0;
 
 	for (auto & p : fs::directory_iterator(respath)) {
 		resfiles.push_back(p.path().string());
@@ -152,10 +158,33 @@ void initialisefiles(string respath, vector <string>& resfiles, vector <string>&
 		}
 		cout << x << endl;
 		resfilesname.push_back(x.erase(0, (x.find(".")) + 1));
+		if (auxnum >= 4)
+		{
+			posx.push_back(0);
+			posy.push_back(0);
+		}
+		else if(auxnum = 5)
+		{
+			posx.push_back(xPlayer);
+			posy.push_back(yPlayer);
+		}
+		else if(auxnum = 6)
+		{
+			posx.push_back(blockxpos[auxnum - 6]);
+			posy.push_back(blockypos[auxnum - 6]);
+		}
+		else if (auxnum = 7)
+		{
+			posx.push_back(itemxpos[auxnum - 7]);
+			posy.push_back(itemypos[auxnum - 7]);
+		}
+		auxnum++;
 	}
 	for (string y : resfilesname) {
 		cout << y << endl;
 	}
+
+
 
 }
 
@@ -173,9 +202,8 @@ int main(int, char**) {
 	bool Leftpress = 0, Rightpress = 0, Rightpressaux = 0, Leftpressaux = 0, Movingright = 0, Movingleft = 0;
 	int jumpnumber = 0; //TODO: make this a thing!!!
 
-	double xBase = 0, yBase = 0, xMountains = 0, yMountains = 0, xClouds = 0, yClouds = 0, xSun = 0, yGrass = 0;
 	//TODO!! ---> Make this not like this, possibly after initializing vectors... make a vector containing x/y values or smth idk...
-	double xLimit = 3.5, VelNomx = 3.5, ySun = 0, xGrass = 0;
+	double xLimit = 3.5, VelNomx = 3.5, ySun = 0;
 
 	string opath = path();
 	string respath = (opath + "res");
@@ -184,8 +212,10 @@ int main(int, char**) {
 	vector <string> resfiles;
 	vector <string> resfilesname;
 	vector <SDL_Texture*> opt_textures;
+	vector <double> posx, posy, blockypos, blockxpos, itemypos, itemxpos;
 
-	initialisefiles(respath, resfiles, resfilesname);
+
+	initialisefiles(respath, resfiles, resfilesname, posx, posy, blockypos, blockxpos, itemypos, itemxpos, yPlayer, xPlayer);
 	
 	tinyxml2::XMLDocument xmlDoc;
 	tinyxml2::XMLElement * pElement;
@@ -222,11 +252,8 @@ int main(int, char**) {
 	pElement = pRoot->FirstChildElement("Files");
 	if (pElement == nullptr) return tinyxml2::XML_ERROR_PARSING_ELEMENT;
 	tinyxml2::XMLElement * pListElement = pElement->FirstChildElement("Filename");
-	std::vector<string> vecList;
-
-	//YOU CAN INPUT STUFF FROM HERE ON, EVERYTHING BEFORE THIS HAPPENS BEFORE YOU TYPE ANYTHIIIING
-
-
+	vector<string> vecList;
+	
 	//Start up SDL and make sure it went ok
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		logSDLError(std::cout, "SDL_Init");
