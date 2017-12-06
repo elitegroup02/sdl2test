@@ -9,6 +9,7 @@
 #include "tinyxml2.h"
 #include "res_path.h"
 #include "cleanup.h"
+
 namespace fs = std::experimental::filesystem::v1;
 using namespace std;
 
@@ -44,8 +45,8 @@ SDL_Surface *ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height) //T
 	SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, (Width * ((static_cast<double>(Surface->w)) / 1280)), (Height * ((static_cast<double>(Surface->h)) / 720)), Surface->format->BitsPerPixel,
 		Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
 
-	double    _stretch_factor_x = ((static_cast<double>(Width) / (static_cast<double>(Surface->w)))*((static_cast<double>(Surface->w))/1280)),
-		_stretch_factor_y = ((static_cast<double>(Height) / (static_cast<double>(Surface->h)))*(static_cast<double>(Surface->h))/720);
+	double    _stretch_factor_x = ((static_cast<double>(Width) / (static_cast<double>(Surface->w)))*((static_cast<double>(Surface->w)) / 1280)),
+		_stretch_factor_y = ((static_cast<double>(Height) / (static_cast<double>(Surface->h)))*(static_cast<double>(Surface->h)) / 720);
 
 	for (Sint32 y = 0; y < Surface->h; y++) {
 		for (Sint32 x = 0; x < Surface->w; x++) {
@@ -58,7 +59,7 @@ SDL_Surface *ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height) //T
 		}
 	}
 
-	SDL_SetColorKey( _ret , SDL_TRUE, SDL_MapRGB(_ret->format, 0, 0xFF, 0xFF));
+	SDL_SetColorKey(_ret, SDL_TRUE, SDL_MapRGB(_ret->format, 0, 0xFF, 0xFF));
 
 	return _ret;
 }
@@ -138,9 +139,30 @@ string path(void) {
 
 }
 
-void readmap()
+bool readmap(string respath, vector < vector <int> >& rvalue, vector < vector <int> >& gvalue, vector < vector <int> >& bvalue, int& ycounter, int& xcounter)
 {
+	SDL_Surface *Surface = loadSurface(respath + "\\map1a.bmp");
+	Sint32 pixeldata;
+	if (!Surface) {
+		return 0;
+	}
 
+	for (Sint32 y = 0; y < Surface->h; y++)
+	{
+		ycounter++;
+		for (Sint32 x = 0; x < Surface->w; x++)
+		{
+			if (ycounter == 1)
+			{
+				xcounter++;
+			}
+			pixeldata = get_pixel32(Surface, x, y);
+			rvalue[x][y] = GetRValue(pixeldata);
+			gvalue[x][y] = GetGValue(pixeldata);
+			bvalue[x][y] = GetBValue(pixeldata);
+		}
+	}
+	return 1;
 }
 
 void initialisefiles(string respath, vector <string>& resfiles, vector <string>& resfilesname, vector <double>& posx, vector <double>& posy, vector <double> blockypos, vector <double> blockxpos, vector <double> itemypos, vector <double> itemxpos, double yPlayer, double xPlayer) {
@@ -163,12 +185,12 @@ void initialisefiles(string respath, vector <string>& resfiles, vector <string>&
 			posx.push_back(0);
 			posy.push_back(0);
 		}
-		else if(auxnum = 5)
+		else if (auxnum = 5)
 		{
 			posx.push_back(xPlayer);
 			posy.push_back(yPlayer);
 		}
-		else if(auxnum = 6)
+		else if (auxnum = 6)
 		{
 			posx.push_back(blockxpos[auxnum - 6]);
 			posy.push_back(blockypos[auxnum - 6]);
@@ -191,10 +213,9 @@ void initialisefiles(string respath, vector <string>& resfiles, vector <string>&
 
 int main(int, char**) {
 
-	int resolutionx = 1280, resolutiony = 720;
 	//iW and iH are the clip width and height
 	//We'll be drawing only clips so get a center position for the w/h of a clip
-	int iW = 100, iH = 100;
+	int iW = 100, iH = 100, resolutionx = 1280, resolutiony = 720, ycounter = 0, xcounter = 0;
 	double xPlayer = 0; //The initial x position
 	double yPlayer = resolutiony - iH; //The initial height is the floor
 	double Velx = 0, Vely = 0;
@@ -202,7 +223,7 @@ int main(int, char**) {
 	bool Leftpress = 0, Rightpress = 0, Rightpressaux = 0, Leftpressaux = 0, Movingright = 0, Movingleft = 0;
 	int jumpnumber = 0; //TODO: make this a thing!!!
 
-	//TODO!! ---> Make this not like this, possibly after initializing vectors... make a vector containing x/y values or smth idk...
+						//TODO!! ---> Make this not like this, possibly after initializing vectors... make a vector containing x/y values or smth idk...
 	double xLimit = 3.5, VelNomx = 3.5, ySun = 0;
 
 	string opath = path();
@@ -213,10 +234,12 @@ int main(int, char**) {
 	vector <string> resfilesname;
 	vector <SDL_Texture*> opt_textures;
 	vector <double> posx, posy, blockypos, blockxpos, itemypos, itemxpos;
+	vector < vector <int> > rvalue, gvalue, bvalue;
 
+	readmap(respath, rvalue, gvalue, bvalue, ycounter, xcounter);
 
 	initialisefiles(respath, resfiles, resfilesname, posx, posy, blockypos, blockxpos, itemypos, itemxpos, yPlayer, xPlayer);
-	
+
 	tinyxml2::XMLDocument xmlDoc;
 	tinyxml2::XMLElement * pElement;
 	tinyxml2::XMLError eResult = xmlDoc.LoadFile("gamesettings.xml");
@@ -253,7 +276,7 @@ int main(int, char**) {
 	if (pElement == nullptr) return tinyxml2::XML_ERROR_PARSING_ELEMENT;
 	tinyxml2::XMLElement * pListElement = pElement->FirstChildElement("Filename");
 	vector<string> vecList;
-	
+
 	//Start up SDL and make sure it went ok
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		logSDLError(std::cout, "SDL_Init");
@@ -276,7 +299,7 @@ int main(int, char**) {
 		SDL_Quit();
 		return 1;
 	}
-	
+
 
 	for (string x : resfiles) {
 		opt_textures.push_back(SDL_CreateTextureFromSurface(renderer, ScaleSurface(loadSurface(x), resolutionx, resolutiony)));
@@ -309,7 +332,7 @@ int main(int, char**) {
 			if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
 				case SDLK_SPACE:
-					Vely = - 20;
+					Vely = -20;
 					break;
 				case SDLK_LEFT:
 					Leftpress = 1;
@@ -408,7 +431,7 @@ int main(int, char**) {
 			renderTexture(x, renderer, xBase, yBase);
 			renderTexture(x, renderer, (xBase + resolutionx), yBase);
 		}
-		
+
 		SDL_RenderPresent(renderer);
 
 
